@@ -34,6 +34,10 @@
 		{
 			"Name": "WindowsDualsense_ds5w",
 			"Enabled": true
+		},
+		{
+			"Name": "USDImporter",
+			"Enabled": true
 		}
 	]
 }
