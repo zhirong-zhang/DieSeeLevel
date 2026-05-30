@@ -95,7 +95,6 @@ void AFPSCharacter::Tick(float DeltaTime)
 
     if (bIsShiftingGravity && GravityPlane)
     {
-        // 这里保留了前面的修改：带有负号 (-)，修复重力预瞄的上下反转，并使用了暴露的灵敏度变量
         float PitchDelta = -CurrentGyroRotation.Pitch * DeltaTime * GyroGravitySensitivity;
         float RollDelta  =  CurrentGyroRotation.Roll  * DeltaTime * GyroGravitySensitivity;
 
@@ -147,9 +146,13 @@ void AFPSCharacter::Tick(float DeltaTime)
 
             bIsSmoothRotating = false;
 
+            // ================= 【核心触发点：重力切换完毕，触发生成！】 =================
+            SpawnRoomObjects();
+            // =========================================================================
+
             if (GEngine)
             {
-                GEngine->AddOnScreenDebugMessage(-1, 3.0f, FColor::Green, TEXT("【重力姿态对齐完成，已强制 Snap！】"));
+                GEngine->AddOnScreenDebugMessage(-1, 3.0f, FColor::Green, TEXT("【重力姿态对齐完成，已生成场景物件！】"));
             }
         }
     }
@@ -236,9 +239,6 @@ void AFPSCharacter::Look(const FInputActionValue& Value)
     if (Controller != nullptr)
     {
         float YawInput   = Axis.X * GamepadLookSensitivity * GetWorld()->GetDeltaSeconds();
-        
-        // ================= 【恢复原状】 =================
-        // 恢复为 -Axis.Y，保证平时看四周的习惯是正确的
         float PitchInput = -Axis.Y * GamepadLookSensitivity * GetWorld()->GetDeltaSeconds();
 
         FQuat YawRotation(FVector::UpVector, FMath::DegreesToRadians(YawInput));
@@ -257,9 +257,6 @@ void AFPSCharacter::MouseLook(const FInputActionValue& Value)
     if (Controller != nullptr)
     {
         float YawInput   = Axis.X * MouseLookSensitivity;
-
-        // ================= 【恢复原状】 =================
-        // 同样恢复为 -Axis.Y
         float PitchInput = -Axis.Y * MouseLookSensitivity; 
 
         FQuat YawRotation(FVector::UpVector, FMath::DegreesToRadians(YawInput));
@@ -267,5 +264,71 @@ void AFPSCharacter::MouseLook(const FInputActionValue& Value)
 
         CurrentCameraPitch = FMath::Clamp(CurrentCameraPitch + PitchInput, -89.0f, 89.0f);
         FirstPersonCamera->SetRelativeRotation(FRotator(CurrentCameraPitch, 0.f, 0.f));
+    }
+}
+
+// ================= 【新增：随机墙壁探测与生成机制】 =================
+
+bool AFPSCharacter::TryFindRandomWallSpawnPoint(FVector& OutLocation, FRotator& OutRotation)
+{
+    FVector StartLocation = GetActorLocation();
+
+    for (int32 i = 0; i < 10; ++i)
+    {
+        FVector RandomDirection = FMath::VRand();
+        FVector EndLocation = StartLocation + (RandomDirection * 3000.0f);
+
+        FHitResult HitResult;
+        FCollisionQueryParams QueryParams;
+        QueryParams.AddIgnoredActor(this); 
+
+        if (GetWorld()->LineTraceSingleByChannel(HitResult, StartLocation, EndLocation, ECC_Visibility, QueryParams))
+        {
+            AActor* HitActor = HitResult.GetActor();
+            if (HitActor)
+            {
+                // 【调试信息】：打印射线打中了什么东西的名字
+                FString HitName = HitActor->GetName();
+                
+                if (HitActor->ActorHasTag(FName("SpawnableWall")))
+                {
+                    if (GEngine) GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Green, FString::Printf(TEXT("【成功】打中了合法的墙壁: %s"), *HitName));
+                    
+                    OutLocation = HitResult.ImpactPoint;
+                    OutRotation = FRotationMatrix::MakeFromX(HitResult.ImpactNormal).Rotator();
+                    return true;
+                }
+                else
+                {
+                    // 如果你想看看射线浪费在了哪些东西上，可以取消注释下面这行
+                    // if (GEngine) GEngine->AddOnScreenDebugMessage(-1, 2.f, FColor::Red, FString::Printf(TEXT("【失败】打中了没有Tag的物体: %s"), *HitName));
+                }
+            }
+        }
+    }
+
+    if (GEngine) GEngine->AddOnScreenDebugMessage(-1, 3.f, FColor::Yellow, TEXT("10次射线都没打中合法的墙，取消生成"));
+    return false; 
+}
+
+void AFPSCharacter::SpawnRoomObjects()
+{
+    FVector SpawnLoc;
+    FRotator SpawnRot;
+    
+    FActorSpawnParameters SpawnParams;
+    // 配置碰撞覆盖规则：即使轻微穿模，也强行生成
+    SpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
+
+    // 1. 尝试生成 通风口 (出怪口)
+    if (VentSpawnerClass && TryFindRandomWallSpawnPoint(SpawnLoc, SpawnRot))
+    {
+        GetWorld()->SpawnActor<AActor>(VentSpawnerClass, SpawnLoc, SpawnRot, SpawnParams);
+    }
+
+    // 2. 尝试生成 逃生门 (Escape Portal)
+    if (EscapePortalClass && TryFindRandomWallSpawnPoint(SpawnLoc, SpawnRot))
+    {
+        GetWorld()->SpawnActor<AActor>(EscapePortalClass, SpawnLoc, SpawnRot, SpawnParams);
     }
 }

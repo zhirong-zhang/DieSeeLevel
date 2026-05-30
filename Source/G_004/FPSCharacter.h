@@ -20,6 +20,15 @@ public:
     AFPSCharacter();
 
     virtual void Tick(float DeltaTime) override;
+    
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Level Generation")
+    TSubclassOf<AActor> VentSpawnerClass;
+
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Level Generation")
+    TSubclassOf<AActor> EscapePortalClass;
+
+    bool TryFindRandomWallSpawnPoint(FVector& OutLocation, FRotator& OutRotation);
+    void SpawnRoomObjects();
 
 protected:
     virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
@@ -103,4 +112,6 @@ protected:
     void InputGyroData(const FInputActionValue& Value);
     void GyroGravityStarted();
     void GyroGravityCompleted();
+    
+
 };
