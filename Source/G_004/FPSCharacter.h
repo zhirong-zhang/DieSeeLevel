@@ -97,7 +97,7 @@ protected:
     UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Gravity|Transition")
     float SmoothRotationSpeed;
 
-    // 【新增】：单独记录相机的抬头/低头角度，解决重力改变后的视角死锁问题
+    // 单独记录相机的抬头/低头角度，解决重力改变后的视角死锁问题
     UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Camera")
     float CurrentCameraPitch;
 
@@ -112,6 +112,4 @@ protected:
     void InputGyroData(const FInputActionValue& Value);
     void GyroGravityStarted();
     void GyroGravityCompleted();
-    
-
 };

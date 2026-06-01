@@ -56,6 +56,14 @@ void AFPSCharacter::BeginPlay()
 
     GetCharacterMovement()->bOrientRotationToMovement = false;
     GetCharacterMovement()->bUseControllerDesiredRotation = false;
+
+    // =========================================================================
+    // 【新增】：游戏开始时，默认隐藏重力平台及其子组件（箭头）
+    if (GravityPlane)
+    {
+        GravityPlane->SetVisibility(false, true); 
+    }
+    // =========================================================================
 }
 
 void AFPSCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
@@ -169,10 +177,22 @@ void AFPSCharacter::GyroGravityStarted()
     if (GravityPlane)
     {
         InitialPlaneQuat = GravityPlane->GetRelativeRotation().Quaternion();
+        
+        // =========================================================================
+        // 【新增】：按下按键的瞬间，显示重力平台及其子组件
+        GravityPlane->SetVisibility(true, true);
+        // =========================================================================
     }
 
     GetCharacterMovement()->Velocity = FVector::ZeroVector;
     GetCharacterMovement()->SetMovementMode(MOVE_None);
+
+    // 瞬间回正视角，方便玩家以绝对水平面调整重力
+    CurrentCameraPitch = 0.0f;
+    if (FirstPersonCamera)
+    {
+        FirstPersonCamera->SetRelativeRotation(FRotator(0.0f, 0.0f, 0.0f));
+    }
 
     if (GEngine)
     {
@@ -203,6 +223,11 @@ void AFPSCharacter::GyroGravityCompleted()
         if (GravityPlane)
         {
             GravityPlane->SetRelativeRotation(InitialPlaneQuat);
+            
+            // =========================================================================
+            // 【新增】：松开按键的瞬间，隐藏重力平台及其子组件
+            GravityPlane->SetVisibility(false, true);
+            // =========================================================================
         }
     }
 }
@@ -273,6 +298,7 @@ bool AFPSCharacter::TryFindRandomWallSpawnPoint(FVector& OutLocation, FRotator& 
 {
     FVector StartLocation = GetActorLocation();
 
+    // 给它 10 次机会去寻找合法的墙壁
     for (int32 i = 0; i < 10; ++i)
     {
         FVector RandomDirection = FMath::VRand();
@@ -280,35 +306,46 @@ bool AFPSCharacter::TryFindRandomWallSpawnPoint(FVector& OutLocation, FRotator& 
 
         FHitResult HitResult;
         FCollisionQueryParams QueryParams;
-        QueryParams.AddIgnoredActor(this); 
+        QueryParams.AddIgnoredActor(this);
 
+        // 射线追踪
         if (GetWorld()->LineTraceSingleByChannel(HitResult, StartLocation, EndLocation, ECC_Visibility, QueryParams))
         {
             AActor* HitActor = HitResult.GetActor();
             if (HitActor)
             {
-                // 【调试信息】：打印射线打中了什么东西的名字
+                // 【调试可视化】：无论是否打中 Tag，先画出射击射线和击中点
+                // 绘制一条红色的射线，持续 5 秒
+                DrawDebugLine(GetWorld(), StartLocation, HitResult.ImpactPoint, FColor::Red, false, 5.0f);
+
                 FString HitName = HitActor->GetName();
-                
+                FString InfoMsg = FString::Printf(TEXT("【调试】打中 Actor: %s"), *HitName);
+
+                // 检查被击中的 Actor 是否带有 "SpawnableWall" 标签
                 if (HitActor->ActorHasTag(FName("SpawnableWall")))
                 {
                     if (GEngine) GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Green, FString::Printf(TEXT("【成功】打中了合法的墙壁: %s"), *HitName));
-                    
+                    DrawDebugBox(GetWorld(), HitResult.ImpactPoint, FVector(10.0f), FColor::Green, false, 5.0f); // 【调试可视化】：成功点画一个绿色的框
+
+                    // 只有打中带有该标签的墙壁，才算成功找到点
                     OutLocation = HitResult.ImpactPoint;
+
+                    // 依然保持正脸朝外（X轴 = 法线）
                     OutRotation = FRotationMatrix::MakeFromX(HitResult.ImpactNormal).Rotator();
-                    return true;
+
+                    return true; // 成功找到合法墙壁，退出循环
                 }
                 else
                 {
-                    // 如果你想看看射线浪费在了哪些东西上，可以取消注释下面这行
                     // if (GEngine) GEngine->AddOnScreenDebugMessage(-1, 2.f, FColor::Red, FString::Printf(TEXT("【失败】打中了没有Tag的物体: %s"), *HitName));
+                    DrawDebugBox(GetWorld(), HitResult.ImpactPoint, FVector(5.0f), FColor::Red, false, 5.0f); // 【调试可视化】：失败点画一个红色的框
                 }
             }
         }
     }
 
     if (GEngine) GEngine->AddOnScreenDebugMessage(-1, 3.f, FColor::Yellow, TEXT("10次射线都没打中合法的墙，取消生成"));
-    return false; 
+    return false; // 10次都没打中合法的墙壁，放弃生成
 }
 
 void AFPSCharacter::SpawnRoomObjects()
