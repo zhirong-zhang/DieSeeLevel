@@ -36,8 +36,6 @@ Thumbs.db
 *.bak
 *_backup*
 
-GithubLink.txt
-
 # Shader intermediate files
 ShaderWarmup/
 
