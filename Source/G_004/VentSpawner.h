@@ -14,35 +14,35 @@ UCLASS()
 class G_004_API AVentSpawner : public AActor
 {
 	GENERATED_BODY()
-    
-public:	
+
+public:
 	AVentSpawner();
 
 protected:
 	virtual void BeginPlay() override;
 
-public:	
-	// 1. 空场景组件作为真正的根节点，解绑模型方向限制
+public:
+	// 1. empty scene component as the true root — decouples mesh orientation from Actor rotation
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components")
 	USceneComponent* DefaultRoot;
 
-	// 2. 通风口模型
+	// 2. vent mesh
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components")
 	UStaticMeshComponent* VentMesh;
 
-	// 3. 生成方向指示箭头
+	// 3. arrow indicating the spawn direction (X axis forward)
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components")
 	UArrowComponent* SpawnDirectionArrow;
 
-	// 4. 怪物生成的随机范围框
+	// 4. box defining the random spawn volume for the Boss
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components")
 	UBoxComponent* SpawnArea;
 
-	// 要生成的 Boss 类（需在蓝图中配置）
+	// Boss class to spawn (set in Blueprint)
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Spawning")
 	TSubclassOf<ABossAI> BossClassToSpawn;
 
-	// 生成 Boss 的函数
+	// spawns the Boss inside the SpawnArea box
 	UFUNCTION(BlueprintCallable, Category = "Spawning")
 	void SpawnBoss();
 };

@@ -20,7 +20,7 @@ public:
     AFPSCharacter();
 
     virtual void Tick(float DeltaTime) override;
-    
+
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Level Generation")
     TSubclassOf<AActor> VentSpawnerClass;
 
@@ -33,7 +33,7 @@ public:
 protected:
     virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
 
-    // ---------------- 【组件】 ----------------
+    // ---------------- Components ----------------
     UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Camera")
     UCameraComponent* FirstPersonCamera;
 
@@ -43,14 +43,14 @@ protected:
     UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components")
     UStaticMeshComponent* GravityArrow;
 
-    // ---------------- 【输入动作】 ----------------
+    // ---------------- Input Actions ----------------
     UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Input")
     UInputAction* MoveAction;
 
     UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Input")
     UInputAction* LookAction;
 
-    // 鼠标视角（Mouse XY 2D-Axis），与手柄摇杆分开以便独立设置灵敏度
+    // mouse look (Mouse XY 2D-Axis) — separate from gamepad stick so sensitivity can differ
     UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Input")
     UInputAction* MouseLookAction;
 
@@ -59,10 +59,10 @@ protected:
 
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Camera Settings")
     float MouseLookSensitivity = 1.0f;
-    
+
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Gravity Settings")
     float GyroGravitySensitivity = 150.0f;
-    
+
     UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Input")
     UInputAction* JumpAction;
 
@@ -72,9 +72,9 @@ protected:
     UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Input|Gravity")
     UInputAction* GyroDataAction;
 
-    // ---------------- 【核心状态变量】 ----------------
+    // ---------------- Core State ----------------
     UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Gravity|State")
-    FRotator CurrentGyroRotation; 
+    FRotator CurrentGyroRotation;
 
     UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Gravity|State")
     FQuat InitialPlaneQuat;
@@ -97,18 +97,18 @@ protected:
     UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Gravity|Transition")
     float SmoothRotationSpeed;
 
-    // 单独记录相机的抬头/低头角度，解决重力改变后的视角死锁问题
+    // camera pitch tracked manually — fixes camera lock after a gravity flip
     UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Camera")
     float CurrentCameraPitch;
 
-    // ---------------- 【内部工具函数】 ----------------
+    // ---------------- Internal Helpers ----------------
     virtual void BeginPlay() override;
     FVector SnapVectorToClosestAxis(const FVector& InVector);
 
-    // ---------------- 【输入处理函数】 ----------------
+    // ---------------- Input Handlers ----------------
     void Move(const FInputActionValue& Value);
-    void Look(const FInputActionValue& Value);       // 手柄右摇杆
-    void MouseLook(const FInputActionValue& Value);  // 鼠标
+    void Look(const FInputActionValue& Value);       // gamepad right stick
+    void MouseLook(const FInputActionValue& Value);  // mouse
     void InputGyroData(const FInputActionValue& Value);
     void GyroGravityStarted();
     void GyroGravityCompleted();

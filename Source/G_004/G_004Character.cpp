@@ -4,7 +4,7 @@
 #include "Engine/LocalPlayer.h"
 #include "Camera/CameraComponent.h"
 #include "Components/CapsuleComponent.h"
-#include "Components/ArrowComponent.h" // 【新增】引入箭头组件头文件
+#include "Components/ArrowComponent.h"
 #include "GameFramework/CharacterMovementComponent.h"
 #include "GameFramework/SpringArmComponent.h"
 #include "GameFramework/Controller.h"
@@ -15,12 +15,12 @@
 
 AG_004Character::AG_004Character()
 {
-    // 【新增】允许角色执行 Tick 函数
+    // enable Tick
     PrimaryActorTick.bCanEverTick = true;
 
     // Set size for collision capsule
     GetCapsuleComponent()->InitCapsuleSize(42.f, 96.0f);
-       
+
     // Don't rotate when the controller rotates. Let that just affect the camera.
     bUseControllerRotationPitch = false;
     bUseControllerRotationYaw = false;
@@ -40,22 +40,22 @@ AG_004Character::AG_004Character()
     CameraBoom = CreateDefaultSubobject<USpringArmComponent>(TEXT("CameraBoom"));
     CameraBoom->SetupAttachment(RootComponent);
     CameraBoom->TargetArmLength = 400.0f;
-    CameraBoom->bUsePawnControlRotation = true; 
+    CameraBoom->bUsePawnControlRotation = true;
 
     // Create a follow camera
     FollowCamera = CreateDefaultSubobject<UCameraComponent>(TEXT("FollowCamera"));
     FollowCamera->SetupAttachment(CameraBoom, USpringArmComponent::SocketName);
     FollowCamera->bUsePawnControlRotation = false;
 
-    // ---------------- 【新增】初始化重力指示箭头 ----------------
+    // initialize gravity direction arrow
     GravityArrow = CreateDefaultSubobject<UArrowComponent>(TEXT("GravityArrow"));
-    GravityArrow->SetupAttachment(RootComponent); 
-    GravityArrow->ArrowSize = 3.0f;               
-    GravityArrow->SetHiddenInGame(false);         
-    
-    bIsAimingGravity = false; 
-    
-    // 初始化陀螺仪记录变量
+    GravityArrow->SetupAttachment(RootComponent);
+    GravityArrow->ArrowSize = 3.0f;
+    GravityArrow->SetHiddenInGame(false);
+
+    bIsAimingGravity = false;
+
+    // initialize gyro state
     CurrentGyroRotation = FRotator::ZeroRotator;
     StartGyroRotation = FRotator::ZeroRotator;
 }
@@ -63,7 +63,7 @@ AG_004Character::AG_004Character()
 void AG_004Character::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
 {
     if (UEnhancedInputComponent* EnhancedInputComponent = Cast<UEnhancedInputComponent>(PlayerInputComponent)) {
-       
+
        EnhancedInputComponent->BindAction(JumpAction, ETriggerEvent::Started, this, &ACharacter::Jump);
        EnhancedInputComponent->BindAction(JumpAction, ETriggerEvent::Completed, this, &ACharacter::StopJumping);
        EnhancedInputComponent->BindAction(MoveAction, ETriggerEvent::Triggered, this, &AG_004Character::Move);
@@ -86,50 +86,46 @@ void AG_004Character::SetupPlayerInputComponent(UInputComponent* PlayerInputComp
     }
 }
 
-// ====================================================================================
-//                             核心逻辑区：保留陀螺仪任意重力计算
-// ====================================================================================
-
 void AG_004Character::InputGyroData(const FInputActionValue& Value)
 {
     FVector GyroVector = Value.Get<FVector>();
-    CurrentGyroRotation = FRotator(GyroVector.Y, GyroVector.Z, GyroVector.X); 
+    CurrentGyroRotation = FRotator(GyroVector.Y, GyroVector.Z, GyroVector.X);
 }
 
 void AG_004Character::GyroGravityStarted()
 {
     StartGyroRotation = CurrentGyroRotation;
-    bIsAimingGravity = true; // 【新增】进入瞄准状态
+    bIsAimingGravity = true;
 
     if (GEngine)
     {
-        GEngine->AddOnScreenDebugMessage(-1, 2.0f, FColor::Yellow, TEXT("按键已按下！进入重力瞄准模式。"));
+        GEngine->AddOnScreenDebugMessage(-1, 2.0f, FColor::Yellow, TEXT("Button pressed — gravity aim mode active."));
     }
 }
 
 void AG_004Character::GyroGravityCompleted()
 {
-    bIsAimingGravity = false; // 【新增】退出瞄准状态
+    bIsAimingGravity = false;
 
-    // 1. 计算相对偏移并规范化
+    // 1. compute relative offset and normalize
     FRotator DeltaRotation = CurrentGyroRotation - StartGyroRotation;
-    DeltaRotation.Normalize(); 
+    DeltaRotation.Normalize();
 
-    // 2. 旋转基础重力向量
+    // 2. rotate the default gravity vector
     FVector DefaultGravityDir(0.0f, 0.0f, -1.0f);
     FVector RawNewGravity = DeltaRotation.RotateVector(DefaultGravityDir);
     FVector SnappedGravity = FVector::ZeroVector;
     float MaxAxisValue = -1.0f;
 
-    // 3. 90度整数吸附算法
+    // 3. snap to nearest 90-degree axis
     if (FMath::Abs(RawNewGravity.X) > MaxAxisValue) { MaxAxisValue = FMath::Abs(RawNewGravity.X); SnappedGravity = FVector(FMath::Sign(RawNewGravity.X), 0.0f, 0.0f); }
     if (FMath::Abs(RawNewGravity.Y) > MaxAxisValue) { MaxAxisValue = FMath::Abs(RawNewGravity.Y); SnappedGravity = FVector(0.0f, FMath::Sign(RawNewGravity.Y), 0.0f); }
     if (FMath::Abs(RawNewGravity.Z) > MaxAxisValue) { MaxAxisValue = FMath::Abs(RawNewGravity.Z); SnappedGravity = FVector(0.0f, 0.0f, FMath::Sign(RawNewGravity.Z)); }
 
-    // 4. 应用最新的重力方向，让角色贴附墙面
+    // 4. apply the new gravity direction
     GetCharacterMovement()->SetGravityDirection(SnappedGravity);
 
-    // 5. 简单粗暴地将摄像机正上方对齐到新的重力反方向
+    // 5. realign camera up to the new gravity's opposite
     if (AController* PC = GetController())
     {
         FVector NewUpDirection = -SnappedGravity;
@@ -140,14 +136,10 @@ void AG_004Character::GyroGravityCompleted()
 
     if (GEngine)
     {
-        FString DebugMsg = FString::Printf(TEXT("松开！重力已切换: %s"), *SnappedGravity.ToString());
+        FString DebugMsg = FString::Printf(TEXT("Released — gravity switched to: %s"), *SnappedGravity.ToString());
         GEngine->AddOnScreenDebugMessage(-1, 5.0f, FColor::Cyan, DebugMsg);
     }
 }
-
-// ====================================================================================
-//                             以下恢复为原生默认的移动与视角逻辑
-// ====================================================================================
 
 void AG_004Character::Move(const FInputActionValue& Value)
 {
@@ -195,25 +187,17 @@ void AG_004Character::DoJumpEnd()
     StopJumping();
 }
 
-// ====================================================================================
-//                             【新增】实时 Tick 更新箭头
-// ====================================================================================
-
-// ====================================================================================
-//                             【修改】实时 Tick 更新箭头（指向人物朝向）
-// ====================================================================================
-
 void AG_004Character::Tick(float DeltaTime)
 {
     Super::Tick(DeltaTime);
 
     if (bIsAimingGravity && GravityArrow)
     {
-        // === 瞄准模式：实时预览计算 ===
-        
-        // 1. 依然先算出即将生效的重力方向 (之前的代码)
+        // aim mode: preview the gravity direction in real time
+
+        // 1. compute the gravity direction that would be applied on release
         FRotator DeltaRotation = CurrentGyroRotation - StartGyroRotation;
-        DeltaRotation.Normalize(); 
+        DeltaRotation.Normalize();
 
         FVector DefaultGravityDir(0.0f, 0.0f, -1.0f);
         FVector RawNewGravity = DeltaRotation.RotateVector(DefaultGravityDir);
@@ -224,30 +208,27 @@ void AG_004Character::Tick(float DeltaTime)
         if (FMath::Abs(RawNewGravity.Y) > MaxAxisValue) { MaxAxisValue = FMath::Abs(RawNewGravity.Y); SnappedGravity = FVector(0.0f, FMath::Sign(RawNewGravity.Y), 0.0f); }
         if (FMath::Abs(RawNewGravity.Z) > MaxAxisValue) { MaxAxisValue = FMath::Abs(RawNewGravity.Z); SnappedGravity = FVector(0.0f, 0.0f, FMath::Sign(RawNewGravity.Z)); }
 
-        // 2. 【核心修改】：计算人物未来的正前方
-        FVector NewUpDirection = -SnappedGravity;          // 即将变成“天花板”的方向
-        FVector CurrentForward = GetActorForwardVector();  // 角色此时此刻的面朝方向
+        // 2. predict the character's forward direction after landing on the new surface
+        FVector NewUpDirection = -SnappedGravity;         // new "ceiling" direction
+        FVector CurrentForward = GetActorForwardVector(); // current facing direction
 
-        // 把当前的面朝方向，投影到新的“地面”上，这就得出了角色贴墙后的面朝方向
+        // project current forward onto the new gravity plane to get post-landing forward
         FVector PredictedForward = FVector::VectorPlaneProject(CurrentForward, NewUpDirection).GetSafeNormal();
 
-        // 容错处理：如果角色当前的朝向跟新的墙壁完全垂直（即面壁思过状态），投影会失效，此时借用右侧方向
+        // fallback: if facing exactly perpendicular to the new surface, use right vector instead
         if (PredictedForward.IsNearlyZero())
         {
             PredictedForward = FVector::VectorPlaneProject(GetActorRightVector(), NewUpDirection).GetSafeNormal();
         }
 
-        // 让箭头指向预测的人物前方
         GravityArrow->SetWorldRotation(PredictedForward.Rotation());
-        GravityArrow->SetArrowColor(FColor::Yellow); // 预览颜色
+        GravityArrow->SetArrowColor(FColor::Yellow); // preview color
     }
     else if (GravityArrow)
     {
-        // === 正常模式：指向当前真实朝向 ===
-        
-        // 获取角色当前真实的物理朝向
+        // normal mode: show current actual facing direction
         FVector CurrentForward = GetActorForwardVector();
         GravityArrow->SetWorldRotation(CurrentForward.Rotation());
-        GravityArrow->SetArrowColor(FColor::Green); // 锁定颜色
+        GravityArrow->SetArrowColor(FColor::Green); // locked color
     }
 }

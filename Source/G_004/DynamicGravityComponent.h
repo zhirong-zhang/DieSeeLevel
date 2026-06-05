@@ -9,7 +9,7 @@ class G_004_API UDynamicGravityComponent : public UActorComponent
 {
 	GENERATED_BODY()
 
-public:	
+public:
 	UDynamicGravityComponent();
 	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
 
@@ -17,11 +17,11 @@ protected:
 	virtual void BeginPlay() override;
 
 private:
-	// 缓存挂载此组件的物理网格体
+	// cached physics mesh of the owning Actor
 	class UPrimitiveComponent* PhysicsComp;
-    
-	// 缓存玩家角色，用来读取重力方向
+
+	// cached player reference for reading gravity direction
 	class ACharacter* PlayerCharacter;
-	
+
 	FVector LastGravityDir = FVector::ZeroVector;
 };

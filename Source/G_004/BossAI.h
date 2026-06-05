@@ -19,17 +19,17 @@ protected:
 	virtual void BeginPlay() override;
 
 public:
-	// --- AI 属性 ---
+	// --- AI properties ---
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Boss AI")
-	float StopDistance = 150.0f;  // 靠近玩家多近时停止移动
+	float StopDistance = 150.0f;  // how close to the player before stopping
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Boss AI")
-	float RotationSpeed = 8.0f;   // 转身和适应新地面的平滑度
+	float RotationSpeed = 8.0f;   // smoothing speed for body reorientation
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Boss AI")
-	float FloorTraceDistance = 500.0f; // 向下探测地面的射线长度
+	float FloorTraceDistance = 500.0f; // floor detection ray length
 
 private:
-	// 缓存目标玩家的指针
+	// cached reference to the target player
 	AActor* TargetPlayer;
 };

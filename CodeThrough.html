@@ -1,0 +1,984 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CODE-THROUGH</title>
+<style>
+  *, *::before, *::after { box-sizing: border-box; }
+
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+    font-size: 16px;
+    line-height: 1.7;
+    color: #24292f;
+    background: #ffffff;
+    margin: 0;
+    padding: 0;
+  }
+
+  .container {
+    max-width: 860px;
+    margin: 0 auto;
+    padding: 48px 32px 80px;
+  }
+
+  /* ── 顶部标题区 ── */
+  .page-header {
+    padding-bottom: 24px;
+    margin-bottom: 32px;
+    border-bottom: 1px solid #d0d7de;
+  }
+
+  .page-header h1 {
+    font-size: 28px;
+    font-weight: 600;
+    margin: 0 0 8px;
+    color: #1f2328;
+  }
+
+  .page-header p {
+    margin: 0;
+    color: #57606a;
+    font-size: 15px;
+  }
+
+  /* ── 功能描述块 ── */
+  .feature-box {
+    background: #f6f8fa;
+    border: 1px solid #d0d7de;
+    border-radius: 6px;
+    padding: 16px 20px;
+    margin-bottom: 40px;
+    color: #1f2328;
+    font-size: 15px;
+  }
+
+  .feature-box strong {
+    display: block;
+    margin-bottom: 4px;
+    color: #57606a;
+    font-size: 12px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: .5px;
+  }
+
+  /* ── 章节卡片 ── */
+  .section {
+    margin-bottom: 40px;
+    border: 1px solid #d0d7de;
+    border-radius: 6px;
+    overflow: hidden;
+  }
+
+  .section-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 14px 20px;
+    background: #f6f8fa;
+    border-bottom: 1px solid #d0d7de;
+  }
+
+  .badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    background: #0969da;
+    color: #fff;
+    font-size: 12px;
+    font-weight: 700;
+    flex-shrink: 0;
+  }
+
+  .section-header h2 {
+    margin: 0;
+    font-size: 16px;
+    font-weight: 600;
+    color: #1f2328;
+  }
+
+  .section-body {
+    padding: 20px;
+  }
+
+  /* ── 子模块：瓶颈 / 解决办法 ── */
+  .block-label {
+    font-size: 12px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: .5px;
+    margin-bottom: 6px;
+  }
+
+  .block-label.problem { color: #cf222e; }
+  .block-label.solution { color: #1a7f37; }
+  .block-label.code-label { color: #8250df; }
+
+  .block-text {
+    margin: 0 0 20px;
+    color: #1f2328;
+    font-size: 15px;
+  }
+
+  /* ── 参考链接 ── */
+  .ref-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 13px;
+    color: #0969da;
+    text-decoration: none;
+    background: #ddf4ff;
+    border: 1px solid #54aeff66;
+    border-radius: 4px;
+    padding: 3px 10px;
+    margin-bottom: 20px;
+    transition: background .15s;
+  }
+  .ref-link:hover { background: #cae8ff; text-decoration: underline; }
+
+  .ref-link::before {
+    content: "🔗";
+    font-size: 12px;
+  }
+
+  /* ── 代码块 ── */
+  .code-block {
+    background: #f6f8fa;
+    border: 1px solid #d0d7de;
+    border-radius: 6px;
+    overflow: hidden;
+    margin-top: 8px;
+    margin-bottom: 4px;
+  }
+
+  .code-block-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 8px 16px;
+    background: #eaeef2;
+    border-bottom: 1px solid #d0d7de;
+    font-size: 12px;
+    color: #57606a;
+    font-family: ui-monospace, SFMono-Regular, "SF Mono", Menlo, monospace;
+  }
+
+  .code-block-header .filename {
+    font-weight: 600;
+    color: #1f2328;
+  }
+
+  pre {
+    margin: 0;
+    padding: 16px;
+    overflow-x: auto;
+    font-size: 13.5px;
+    line-height: 1.6;
+    font-family: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
+  }
+
+  code { font-family: inherit; }
+
+  /* ── 语法高亮 ── */
+  .kw  { color: #cf222e; font-weight: 600; }   /* 关键字 */
+  .tp  { color: #0550ae; }                      /* 类型 */
+  .fn  { color: #8250df; }                      /* 函数名 */
+  .cm  { color: #57606a; font-style: italic; }  /* 注释 */
+  .nm  { color: #0969da; }                      /* 数字/常量 */
+  .st  { color: #1a7f37; }                      /* 字符串 */
+
+  /* ── 分隔线 ── */
+  hr {
+    border: none;
+    border-top: 1px solid #d0d7de;
+    margin: 24px 0;
+  }
+
+  /* ── 部分标题 ── */
+  .part-header {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    margin: 48px 0 24px;
+  }
+  .part-header:first-of-type { margin-top: 0; }
+  .part-tag {
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: .6px;
+    text-transform: uppercase;
+    color: #fff;
+    background: #57606a;
+    border-radius: 4px;
+    padding: 3px 9px;
+    flex-shrink: 0;
+  }
+  .part-tag.p2 { background: #8250df; }
+  .part-tag.p3 { background: #1a7f37; }
+  .part-tag.p4 { background: #9a6700; }
+  .part-header h2 {
+    margin: 0;
+    font-size: 20px;
+    font-weight: 700;
+    color: #1f2328;
+  }
+  .part-divider {
+    border: none;
+    border-top: 2px solid #d0d7de;
+    margin: 48px 0 0;
+  }
+</style>
+</head>
+<body>
+<div class="container">
+
+  <!-- header -->
+  <div class="page-header">
+    <h1>Die, See, Level</h1>
+    <p>
+      A first-person action game prototype built in Unreal Engine 5.7. You physically rotate a PS5 DualSense controller to tilt an in-game level indicator and change the world's gravity. Touching an egg spawns an enemy — keep flipping gravity to dodge their attacks.
+    </p>
+    <p style="margin-top: 12px; color: #57606a; font-size: 14px;">
+      This doc covers the specific problems we ran into building each core system, and what we ended up doing about them. Not a tutorial, not a design doc — just a writeup of the bugs and dead ends so the code makes sense when you come back to it later.
+    </p>
+  </div>
+
+  <!-- Part 1 -->
+  <div class="part-header">
+    <span class="part-tag">Part 1</span>
+    <h2>Gyro-Driven Gravity System</h2>
+  </div>
+
+  <div class="feature-box">
+    <strong>What It Does</strong>
+    Reads gyroscope data from the PS controller to rotate an in-game level indicator (GravityPlane), which drives the player character's gravity direction.
+  </div>
+
+  <!-- 1-1 -->
+  <div class="section">
+    <div class="section-header">
+      <span class="badge">1</span>
+      <h2>UE has no native support for PlayStation controllers</h2>
+    </div>
+    <div class="section-body">
+
+      <div class="block-label problem">The Problem</div>
+      <p class="block-text">
+        UE doesn't recognize PS5 DualSense out of the box — buttons and axes both come back empty.
+      </p>
+
+      <div class="block-label solution">The Fix</div>
+      <p class="block-text">
+        Manually register the controller in Project Settings → Raw Input using its <code>VID/PID</code>,
+        map the raw axis indices (e.g. <code>GenericUSBController Axis 1</code>) to engine input names,
+        then bind them in <code>SetupPlayerInputComponent</code> via Enhanced Input.
+      </p>
+
+      <a class="ref-link" href="https://www.bilibili.com/video/BV1g4HqeiEFF/?spm_id_from=333.337.search-card.all.click" target="_blank">
+        Reference: BV1g4HqeiEFF
+      </a>
+
+    </div>
+  </div>
+
+  <!-- 1-2 -->
+  <div class="section">
+    <div class="section-header">
+      <span class="badge">2</span>
+      <h2>Raw Input can't read gyroscope data from the PS controller</h2>
+    </div>
+    <div class="section-body">
+
+      <div class="block-label problem">The Problem</div>
+      <p class="block-text">
+        Raw Input only handles standard axes and buttons. The gyroscope data is completely outside that system.
+      </p>
+
+      <div class="block-label solution">The Fix</div>
+      <p class="block-text">
+        Switched to the <strong>Controller Support plugin</strong>, which talks directly to the hardware SDK
+        and registers the live IMU orientation as float vector input channels the engine can read.
+      </p>
+
+      <a class="ref-link" href="https://github.com/rafaelvaloto/Unreal-Dualsense/" target="_blank">
+        Reference: rafaelvaloto/Unreal-Dualsense
+      </a>
+
+    </div>
+  </div>
+
+  <!-- 1-3 -->
+  <div class="section">
+    <div class="section-header">
+      <span class="badge">3</span>
+      <h2>Assigning raw Euler angles directly causes value jumps and gimbal lock</h2>
+    </div>
+    <div class="section-body">
+
+      <div class="block-label problem">The Problem</div>
+      <p class="block-text">
+        Directly assigning the plugin's absolute Euler angles to the object causes sudden flips when crossing ±180°,
+        and Euler angles have inherent gimbal lock — at certain orientations the rotation becomes completely unpredictable.
+      </p>
+
+      <div class="block-label solution">The Fix</div>
+      <p class="block-text">
+        Switched to <strong>per-frame delta accumulation</strong> + <strong>quaternion composition</strong>.
+        Each frame builds a relative offset from the starting quaternion recorded at button press,
+        which sidesteps Euler singularities entirely.
+      </p>
+
+      <div class="block-label code-label">Code — <span style="font-weight:400">FPSCharacter.cpp · Tick()</span></div>
+      <div class="code-block">
+        <div class="code-block-header">
+          <span class="filename">FPSCharacter.cpp</span>
+          <span>Tick() · lines 104–128</span>
+        </div>
+        <pre><code><span class="cm">// convert gyro angular velocity to a delta angle for this frame</span>
+<span class="kw">float</span> PitchDelta = -CurrentGyroRotation.Pitch * DeltaTime * GyroGravitySensitivity;
+<span class="kw">float</span> RollDelta  =  CurrentGyroRotation.Roll  * DeltaTime * GyroGravitySensitivity;
+
+<span class="kw">float</span> AbsPitch = <span class="fn">FMath::Abs</span>(PitchDelta);
+<span class="kw">float</span> AbsRoll  = <span class="fn">FMath::Abs</span>(RollDelta);
+
+<span class="cm">// single-axis lock: only the dominant axis accumulates, suppresses gyro noise</span>
+<span class="kw">if</span> (AbsPitch > AbsRoll &amp;&amp; AbsPitch > <span class="nm">0.01f</span>)
+    AccumulatedPitch += PitchDelta;
+<span class="kw">else if</span> (AbsRoll > AbsPitch &amp;&amp; AbsRoll > <span class="nm">0.01f</span>)
+    AccumulatedRoll  += RollDelta;
+
+<span class="cm">// compose the two axis deltas onto the starting quaternion</span>
+<span class="cm">// quaternion multiply instead of FRotator addition — no gimbal lock</span>
+<span class="tp">FQuat</span> QPitch(<span class="tp">FVector</span>::RightVector,   <span class="fn">FMath::DegreesToRadians</span>(AccumulatedPitch));
+<span class="tp">FQuat</span> QRoll (<span class="tp">FVector</span>::ForwardVector, <span class="fn">FMath::DegreesToRadians</span>(AccumulatedRoll));
+<span class="tp">FQuat</span> NewRelativeRot = InitialPlaneQuat * QPitch * QRoll;
+
+GravityPlane-><span class="fn">SetRelativeRotation</span>(NewRelativeRot);</code></pre>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- 1-4 -->
+  <div class="section">
+    <div class="section-header">
+      <span class="badge">4</span>
+      <h2>RInterpTo step size shrinks near the target — rotation stalls and never finishes</h2>
+    </div>
+    <div class="section-body">
+
+      <div class="block-label problem">The Problem</div>
+      <p class="block-text">
+        After releasing the button, the view gets stuck in the last few degrees.
+        <code>RInterpTo</code> takes smaller and smaller steps as it approaches the target —
+        floating point drift means those final fractions take dozens of frames to clear,
+        and the "done" condition never triggers.
+      </p>
+
+      <div class="block-label solution">The Fix</div>
+      <p class="block-text">
+        Added an early exit: check the quaternion <code>AngularDistance</code> each frame,
+        and hard-snap to the target once it drops below 1°. Don't wait for the interpolation to converge naturally.
+        Write the new gravity direction at the same time.
+      </p>
+
+      <div class="block-label code-label">Code — <span style="font-weight:400">FPSCharacter.cpp · Tick()</span></div>
+      <div class="code-block">
+        <div class="code-block-header">
+          <span class="filename">FPSCharacter.cpp</span>
+          <span>Tick() · lines 130–165</span>
+        </div>
+        <pre><code><span class="cm">// smooth interpolation each frame</span>
+<span class="tp">FRotator</span> NewActorRot = <span class="fn">FMath::RInterpTo</span>(
+    CurrentActorRot, TargetActorRotation, DeltaTime, SmoothRotationSpeed);
+
+<span class="fn">SetActorRotation</span>(NewActorRot);
+<span class="kw">if</span> (Controller)
+    Controller-><span class="fn">SetControlRotation</span>(NewActorRot);
+
+<span class="cm">// quaternion angular distance: stable regardless of Euler representation ambiguity</span>
+<span class="kw">float</span> AngleDifference = <span class="fn">FMath::RadiansToDegrees</span>(
+    NewActorRot.<span class="fn">Quaternion</span>().<span class="fn">AngularDistance</span>(TargetActorRotation.<span class="fn">Quaternion</span>()));
+
+<span class="cm">// early exit: hard-snap at &lt;1° to kill floating point tail</span>
+<span class="kw">if</span> (AngleDifference &lt; <span class="nm">1.0f</span>)
+{
+    <span class="fn">SetActorRotation</span>(TargetActorRotation);
+    <span class="kw">if</span> (Controller)
+        Controller-><span class="fn">SetControlRotation</span>(TargetActorRotation);
+
+    <span class="cm">// Z+ = new up direction, negate for gravity</span>
+    <span class="tp">FVector</span> SnappedUp = TargetActorRotation.<span class="fn">Quaternion</span>().<span class="fn">GetAxisZ</span>();
+    <span class="fn">GetCharacterMovement</span>()-><span class="fn">SetGravityDirection</span>(-SnappedUp);
+
+    <span class="cm">// reset to Falling so CMC finds the new floor under the new gravity</span>
+    <span class="fn">GetCharacterMovement</span>()-><span class="fn">SetMovementMode</span>(MOVE_Falling);
+
+    bIsSmoothRotating = <span class="kw">false</span>;
+    <span class="fn">SpawnRoomObjects</span>(); <span class="cm">// gravity aligned — trigger level refresh</span>
+}</code></pre>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- 1-5 -->
+  <div class="section">
+    <div class="section-header">
+      <span class="badge">5</span>
+      <h2>After a gravity flip, standard movement and camera logic both break</h2>
+    </div>
+    <div class="section-body">
+
+      <div class="block-label problem">The Problem</div>
+      <p class="block-text">
+        Once the character's up vector is no longer world Z, the engine's Controller rotation system still operates in world space —
+        movement goes diagonal, the camera drifts, and at worst the character spins in place and can't turn.
+      </p>
+
+      <div class="block-label solution">The Fix</div>
+      <p class="block-text">
+        Cut the Controller rotation coupling entirely and <strong>drive the Actor directly</strong>:
+      </p>
+      <ul style="margin: 0 0 20px; padding-left: 20px; color: #1f2328; font-size: 15px; line-height: 1.8;">
+        <li>Disable it in both the constructor and <code>BeginPlay</code> — some UE systems quietly re-enable it during init, so once isn't enough.</li>
+        <li><strong>Movement</strong>: use <code>GetActorForwardVector()</code> / <code>GetActorRightVector()</code>. These are local to the Actor and automatically correct after it rotates to the new gravity.</li>
+        <li><strong>Yaw</strong>: quaternion rotation around the Actor's local up axis via <code>AddActorLocalRotation</code> — the axis is always right regardless of which surface you're on.</li>
+        <li><strong>Pitch</strong>: <code>CurrentCameraPitch</code> accumulates manually and writes directly to the camera's relative rotation, bypassing Controller space completely.</li>
+      </ul>
+
+      <div class="block-label code-label">Code — <span style="font-weight:400">FPSCharacter.cpp · Constructor &amp; BeginPlay()</span></div>
+      <div class="code-block">
+        <div class="code-block-header">
+          <span class="filename">FPSCharacter.cpp</span>
+          <span>Constructor · lines 17–19 &nbsp;/&nbsp; BeginPlay() · lines 53–58</span>
+        </div>
+        <pre><code><span class="cm">// constructor: cut Controller rotation coupling</span>
+bUseControllerRotationPitch = <span class="kw">false</span>;
+bUseControllerRotationYaw   = <span class="kw">false</span>;
+bUseControllerRotationRoll  = <span class="kw">false</span>;
+<span class="fn">GetCharacterMovement</span>()->bOrientRotationToMovement = <span class="kw">false</span>;
+
+<span class="cm">// BeginPlay: disable again — some UE systems re-enable these during init</span>
+bUseControllerRotationPitch = <span class="kw">false</span>;
+bUseControllerRotationYaw   = <span class="kw">false</span>;
+bUseControllerRotationRoll  = <span class="kw">false</span>;
+<span class="fn">GetCharacterMovement</span>()->bOrientRotationToMovement      = <span class="kw">false</span>;
+<span class="fn">GetCharacterMovement</span>()->bUseControllerDesiredRotation  = <span class="kw">false</span>;</code></pre>
+      </div>
+
+      <div class="block-label code-label" style="margin-top:20px">Code — <span style="font-weight:400">FPSCharacter.cpp · Move()</span></div>
+      <div class="code-block">
+        <div class="code-block-header">
+          <span class="filename">FPSCharacter.cpp</span>
+          <span>Move() · lines 247–257</span>
+        </div>
+        <pre><code><span class="kw">void</span> <span class="fn">AFPSCharacter::Move</span>(<span class="kw">const</span> <span class="tp">FInputActionValue</span>&amp; Value)
+{
+    <span class="kw">if</span> (bIsShiftingGravity || bIsSmoothRotating) <span class="kw">return</span>; <span class="cm">// lock out input during transition</span>
+
+    <span class="tp">FVector2D</span> MovementVector = Value.<span class="fn">Get</span>&lt;<span class="tp">FVector2D</span>&gt;();
+    <span class="kw">if</span> (Controller != <span class="kw">nullptr</span>)
+    {
+        <span class="cm">// Actor-local vectors, not Controller world-space directions</span>
+        <span class="cm">// after gravity flips the Actor has rotated, so these always align with the new floor</span>
+        <span class="fn">AddMovementInput</span>(<span class="fn">GetActorForwardVector</span>(), MovementVector.Y);
+        <span class="fn">AddMovementInput</span>(<span class="fn">GetActorRightVector</span>(),   MovementVector.X);
+    }
+}</code></pre>
+      </div>
+
+      <div class="block-label code-label" style="margin-top:20px">Code — <span style="font-weight:400">FPSCharacter.cpp · Look() / MouseLook()</span></div>
+      <div class="code-block">
+        <div class="code-block-header">
+          <span class="filename">FPSCharacter.cpp</span>
+          <span>Look() · lines 259–275 &nbsp;/&nbsp; MouseLook() · lines 277–293</span>
+        </div>
+        <pre><code><span class="kw">void</span> <span class="fn">AFPSCharacter::Look</span>(<span class="kw">const</span> <span class="tp">FInputActionValue</span>&amp; Value)
+{
+    <span class="kw">if</span> (bIsShiftingGravity || bIsSmoothRotating) <span class="kw">return</span>;
+
+    <span class="tp">FVector2D</span> Axis = Value.<span class="fn">Get</span>&lt;<span class="tp">FVector2D</span>&gt;();
+    <span class="kw">if</span> (Controller != <span class="kw">nullptr</span>)
+    {
+        <span class="kw">float</span> YawInput   =  Axis.X * GamepadLookSensitivity * <span class="fn">GetWorld</span>()-><span class="fn">GetDeltaSeconds</span>();
+        <span class="kw">float</span> PitchInput = -Axis.Y * GamepadLookSensitivity * <span class="fn">GetWorld</span>()-><span class="fn">GetDeltaSeconds</span>();
+
+        <span class="cm">// Yaw: rotate the whole Actor around its local up axis — correct on any surface</span>
+        <span class="tp">FQuat</span> YawRotation(<span class="tp">FVector</span>::UpVector, <span class="fn">FMath::DegreesToRadians</span>(YawInput));
+        <span class="fn">AddActorLocalRotation</span>(YawRotation);
+
+        <span class="cm">// Pitch: accumulate manually and write to camera relative rotation, bypassing Controller space</span>
+        CurrentCameraPitch = <span class="fn">FMath::Clamp</span>(CurrentCameraPitch + PitchInput, <span class="nm">-89.0f</span>, <span class="nm">89.0f</span>);
+        FirstPersonCamera-><span class="fn">SetRelativeRotation</span>(<span class="tp">FRotator</span>(CurrentCameraPitch, <span class="nm">0.f</span>, <span class="nm">0.f</span>));
+    }
+}</code></pre>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════════ -->
+  <hr class="part-divider">
+
+  <!-- Part 2 -->
+  <div class="part-header">
+    <span class="part-tag p2">Part 2</span>
+    <h2>Boss Tracking in a Multi-Gravity World</h2>
+  </div>
+
+  <div class="feature-box">
+    <strong>What It Does</strong>
+    The Boss stays synced to whatever gravity the player is currently using, maintains correct body orientation, and keeps chasing — even when gravity flips mid-pursuit.
+  </div>
+
+  <!-- 2-1 -->
+  <div class="section">
+    <div class="section-header">
+      <span class="badge" style="background:#8250df">1</span>
+      <h2>AI characters are locked to world gravity and can't follow the player's gravity switch</h2>
+    </div>
+    <div class="section-body">
+
+      <div class="block-label problem">The Problem</div>
+      <p class="block-text">
+        AI only knows about world-absolute gravity. After a flip the Boss just stands there on the old surface, orientation unchanged.
+        On top of that, dynamically spawned AI doesn't get a Controller by default, so it can't move at all.
+      </p>
+
+      <div class="block-label solution">The Fix</div>
+      <p class="block-text">
+        Read the player CMC's gravity direction every frame and compare it against the Boss's own.
+        On mismatch, sync immediately — and do two things at the same time to prevent physics explosions:
+        switch to <code>MOVE_Falling</code> to break off the old surface, and nudge the capsule 60 units upward along the old up vector
+        so it doesn't clip into the new floor mid-rotation.
+        Orientation is handled with <strong>quaternion interpolation</strong> — Z axis to new up, X axis toward the player.
+        <code>AutoPossessAI</code> in the constructor handles the Controller problem,
+        and <code>AirControl = 1.0</code> stops the Boss from freezing mid-air right after a switch.
+      </p>
+
+      <div class="block-label code-label">Code — <span style="font-weight:400">BossAI.cpp · Constructor</span></div>
+      <div class="code-block">
+        <div class="code-block-header">
+          <span class="filename">BossAI.cpp</span>
+          <span>Constructor · lines 8–28</span>
+        </div>
+        <pre><code><span class="cm">// disable Controller rotation coupling — we drive orientation manually with quaternions</span>
+bUseControllerRotationPitch = <span class="kw">false</span>;
+bUseControllerRotationYaw   = <span class="kw">false</span>;
+bUseControllerRotationRoll  = <span class="kw">false</span>;
+<span class="fn">GetCharacterMovement</span>()->bOrientRotationToMovement = <span class="kw">false</span>;
+
+<span class="cm">// auto-bind AI Controller whether placed in level or dynamically spawned</span>
+AutoPossessAI = <span class="tp">EAutoPossessAI</span>::PlacedInWorldOrSpawned;
+
+<span class="cm">// after a gravity switch the Boss may be mid-air — AirControl=1.0 keeps it responsive</span>
+<span class="fn">GetCharacterMovement</span>()->AirControl = <span class="nm">1.0f</span>;</code></pre>
+      </div>
+
+      <div class="block-label code-label" style="margin-top:20px">Code — <span style="font-weight:400">BossAI.cpp · Tick()</span></div>
+      <div class="code-block">
+        <div class="code-block-header">
+          <span class="filename">BossAI.cpp</span>
+          <span>Tick() · lines 53–92</span>
+        </div>
+        <pre><code><span class="cm">// read from the player's CMC, not the player's UpVector — UpVector wobbles during rotation transition</span>
+<span class="tp">FVector</span> TargetGravity  = PlayerCMC-><span class="fn">GetGravityDirection</span>();
+<span class="tp">FVector</span> TargetUpVector = -TargetGravity;
+
+<span class="tp">FVector</span> BossCurrentGravity = <span class="fn">GetCharacterMovement</span>()-><span class="fn">GetGravityDirection</span>();
+
+<span class="kw">if</span> (!BossCurrentGravity.<span class="fn">Equals</span>(TargetGravity, <span class="nm">0.01f</span>))
+{
+    <span class="fn">GetCharacterMovement</span>()-><span class="fn">SetGravityDirection</span>(TargetGravity);
+
+    <span class="cm">// anti-explosion ①: break off the old floor's surface snapping</span>
+    <span class="fn">GetCharacterMovement</span>()-><span class="fn">SetMovementMode</span>(MOVE_Falling);
+
+    <span class="cm">// anti-explosion ②: nudge capsule upward so it doesn't clip into the new floor</span>
+    <span class="fn">AddActorWorldOffset</span>(<span class="fn">GetActorUpVector</span>() * <span class="nm">60.0f</span>, <span class="kw">false</span>);
+}
+
+<span class="cm">// build target orientation: Z = new up, X = toward player</span>
+<span class="tp">FVector</span> ToPlayer      = TargetPlayer-><span class="fn">GetActorLocation</span>() - <span class="fn">GetActorLocation</span>();
+<span class="tp">FVector</span> MoveDirection = <span class="tp">FVector</span>::<span class="fn">VectorPlaneProject</span>(ToPlayer, TargetUpVector).<span class="fn">GetSafeNormal</span>();
+
+<span class="kw">if</span> (!MoveDirection.<span class="fn">IsNearlyZero</span>())
+{
+    <span class="tp">FQuat</span> TargetQuat = <span class="tp">FRotationMatrix</span>::<span class="fn">MakeFromZX</span>(TargetUpVector, MoveDirection).<span class="fn">ToQuat</span>();
+
+    <span class="cm">// quaternion slerp: no gimbal lock, shortest rotation path</span>
+    <span class="tp">FQuat</span> NewQuat = <span class="fn">FMath::QInterpTo</span>(<span class="fn">GetActorQuat</span>(), TargetQuat, DeltaTime, RotationSpeed);
+    <span class="fn">SetActorRotation</span>(NewQuat);
+}</code></pre>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- 2-2 -->
+  <div class="section">
+    <div class="section-header">
+      <span class="badge" style="background:#8250df">2</span>
+      <h2>NavMesh completely breaks in a multi-gravity environment</h2>
+    </div>
+    <div class="section-body">
+
+      <div class="block-label problem">The Problem</div>
+      <p class="block-text">
+        NavMesh is baked against a standard Z-up floor. Once the player is on a wall or ceiling there's no valid path,
+        so the Boss just stops. Rebaking dynamically is theoretically possible but way too slow to run on every gravity switch.
+      </p>
+
+      <div class="block-label solution">The Fix</div>
+      <p class="block-text">
+        Skip NavMesh entirely. Each frame compute the vector from Boss to player,
+        project it onto the current gravity plane, and push with <code>AddMovementInput</code>.
+        Movement is blocked until orientation is close enough to the new gravity (angle > 2° = still rotating, don't chase yet).
+      </p>
+
+      <div class="block-label code-label">Code — <span style="font-weight:400">BossAI.cpp · Tick()</span></div>
+      <div class="code-block">
+        <div class="code-block-header">
+          <span class="filename">BossAI.cpp</span>
+          <span>Tick() · lines 76–104</span>
+        </div>
+        <pre><code><span class="cm">// check how far the Boss's up vector is from the target up vector</span>
+<span class="kw">float</span> AngleDiff = <span class="fn">FMath::RadiansToDegrees</span>(
+    <span class="fn">FMath::Acos</span>(<span class="tp">FVector</span>::<span class="fn">DotProduct</span>(<span class="fn">GetActorUpVector</span>(), TargetUpVector)));
+<span class="kw">bool</span> bIsAligningGravity = (AngleDiff > <span class="nm">2.0f</span>);
+
+<span class="cm">// pure vector pathfinding: project toward-player direction onto gravity plane</span>
+<span class="tp">FVector</span> ToPlayer      = TargetPlayer-><span class="fn">GetActorLocation</span>() - <span class="fn">GetActorLocation</span>();
+<span class="tp">FVector</span> MoveDirection = <span class="tp">FVector</span>::<span class="fn">VectorPlaneProject</span>(ToPlayer, TargetUpVector).<span class="fn">GetSafeNormal</span>();
+
+<span class="cm">// don't move until orientation is settled — prevents chasing sideways mid-flip</span>
+<span class="kw">if</span> (!bIsAligningGravity)
+{
+    <span class="kw">float</span> DistanceToPlayer = ToPlayer.<span class="fn">Length</span>();
+    <span class="kw">if</span> (DistanceToPlayer > StopDistance)
+    {
+        <span class="cm">// direct AddMovementInput — no NavMesh involved</span>
+        <span class="fn">AddMovementInput</span>(MoveDirection, <span class="nm">1.0f</span>);
+    }
+}</code></pre>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════════ -->
+  <hr class="part-divider">
+
+  <!-- Part 3 -->
+  <div class="part-header">
+    <span class="part-tag p3">Part 3</span>
+    <h2>DynamicGravityComponent — Physics Prop Gravity Sync</h2>
+  </div>
+
+  <div class="feature-box">
+    <strong>What It Does</strong>
+    A reusable component you attach to any physics-simulated Actor. Makes scene props (crates, etc.) move under whatever gravity direction the player is currently using, so the physical world stays consistent after every flip.
+  </div>
+
+  <!-- 3-1 -->
+  <div class="section">
+    <div class="section-header">
+      <span class="badge" style="background:#1a7f37">1</span>
+      <h2>Physics props have no way to follow the player's gravity direction</h2>
+    </div>
+    <div class="section-body">
+
+      <div class="block-label problem">The Problem</div>
+      <p class="block-text">
+        Chaos Physics uses a global fixed gravity. After the player flips gravity, every prop in the scene still falls toward world Z-down.
+      </p>
+
+      <div class="block-label solution">The Fix</div>
+      <p class="block-text">
+        In <code>BeginPlay</code>, disable the mesh's built-in gravity and cache a reference to the player.
+        Each tick, read the player CMC's gravity direction and manually apply the equivalent acceleration to the prop,
+        taking full ownership of its gravity behavior.
+      </p>
+
+      <div class="block-label code-label">Code — <span style="font-weight:400">DynamicGravityComponent.cpp · BeginPlay()</span></div>
+      <div class="code-block">
+        <div class="code-block-header">
+          <span class="filename">DynamicGravityComponent.cpp</span>
+          <span>BeginPlay() · lines 12–27</span>
+        </div>
+        <pre><code><span class="cm">// get the root component of whichever Actor this is attached to (the physics mesh)</span>
+PhysicsComp = <span class="fn">Cast</span>&lt;<span class="tp">UPrimitiveComponent</span>&gt;(<span class="fn">GetOwner</span>()-><span class="fn">GetRootComponent</span>());
+
+<span class="kw">if</span> (PhysicsComp &amp;&amp; PhysicsComp-><span class="fn">IsSimulatingPhysics</span>())
+{
+    <span class="cm">// kill built-in gravity — this component takes over from here</span>
+    PhysicsComp-><span class="fn">SetEnableGravity</span>(<span class="kw">false</span>);
+}
+
+<span class="cm">// cache player reference so we can read gravity direction each tick</span>
+PlayerCharacter = <span class="fn">UGameplayStatics::GetPlayerCharacter</span>(<span class="fn">GetWorld</span>(), <span class="nm">0</span>);</code></pre>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- 3-2 -->
+  <div class="section">
+    <div class="section-header">
+      <span class="badge" style="background:#1a7f37">2</span>
+      <h2>Rigid body sleep causes props to teleport on gravity switch</h2>
+    </div>
+    <div class="section-body">
+
+      <div class="block-label problem">The Problem</div>
+      <p class="block-text">
+        Chaos marks idle rigid bodies as sleeping. Sleeping bodies drop applied forces on the floor.
+        So when gravity switches, the new force gets ignored — the prop just sits there until something bumps it,
+        then snaps suddenly. Looks like a teleport.
+      </p>
+
+      <div class="block-label solution">The Fix</div>
+      <p class="block-text">
+        Compare gravity direction every frame. The moment it changes, call <code>WakeRigidBody()</code> before applying the force.
+      </p>
+
+      <div class="block-label code-label">Code — <span style="font-weight:400">DynamicGravityComponent.cpp · TickComponent()</span></div>
+      <div class="code-block">
+        <div class="code-block-header">
+          <span class="filename">DynamicGravityComponent.cpp</span>
+          <span>TickComponent() · lines 35–43</span>
+        </div>
+        <pre><code><span class="tp">FVector</span> CurrentGravityDir = PlayerCharacter-><span class="fn">GetCharacterMovement</span>()-><span class="fn">GetGravityDirection</span>();
+
+<span class="cm">// detect gravity direction change and wake the body before applying force</span>
+<span class="kw">if</span> (!CurrentGravityDir.<span class="fn">Equals</span>(LastGravityDir, <span class="nm">0.01f</span>))
+{
+    PhysicsComp-><span class="fn">WakeRigidBody</span>();  <span class="cm">// force out of sleep so the next AddForce actually lands</span>
+    LastGravityDir = CurrentGravityDir;
+}</code></pre>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- 3-3 -->
+  <div class="section">
+    <div class="section-header">
+      <span class="badge" style="background:#1a7f37">3</span>
+      <h2>Different-mass props fall at different rates when force is applied manually</h2>
+    </div>
+    <div class="section-body">
+
+      <div class="block-label problem">The Problem</div>
+      <p class="block-text">
+        <code>AddForce</code> applies a force, not an acceleration — a light prop goes flying while a heavy one barely moves.
+        Every prop ends up falling at a different speed.
+      </p>
+
+      <div class="block-label solution">The Fix</div>
+      <p class="block-text">
+        Pass <code>true</code> as the third argument to <code>AddForce</code> (<code>bAccelChange</code>).
+        That switches it to acceleration mode — the engine multiplies by mass internally,
+        so every prop falls at exactly 980 cm/s² regardless of weight.
+      </p>
+
+      <div class="block-label code-label">Code — <span style="font-weight:400">DynamicGravityComponent.cpp · TickComponent()</span></div>
+      <div class="code-block">
+        <div class="code-block-header">
+          <span class="filename">DynamicGravityComponent.cpp</span>
+          <span>TickComponent() · lines 45–49</span>
+        </div>
+        <pre><code><span class="cm">// bAccelChange = true: pass acceleration, not force</span>
+<span class="cm">// engine multiplies by mass internally — all props fall at 980 cm/s² regardless of weight</span>
+PhysicsComp-><span class="fn">AddForce</span>(CurrentGravityDir * <span class="nm">980.0f</span>, NAME_None, <span class="kw">true</span>);</code></pre>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════════ -->
+  <hr class="part-divider">
+
+  <!-- Part 4 -->
+  <div class="part-header">
+    <span class="part-tag p4">Part 4</span>
+    <h2>Boss Spawn System</h2>
+  </div>
+
+  <div class="feature-box">
+    <strong>What It Does</strong>
+    The moment gravity alignment completes, VentSpawners get placed on random walls and immediately eject a Boss into the room — refreshing the level after every gravity flip.
+  </div>
+
+  <!-- 4-1 -->
+  <div class="section">
+    <div class="section-header">
+      <span class="badge" style="background:#9a6700">1</span>
+      <h2>Catching the exact moment gravity alignment finishes</h2>
+    </div>
+    <div class="section-body">
+
+      <div class="block-label problem">The Problem</div>
+      <p class="block-text">
+        During the rotation transition the coordinate system is unstable — raycasts fired mid-rotation come out at wrong angles.
+        But using a Timer or Blueprint notify makes it hard to guarantee you're actually synced with the physics state.
+      </p>
+
+      <div class="block-label solution">The Fix</div>
+      <p class="block-text">
+        Call <code>SpawnRoomObjects()</code> as the very last line of the angle convergence block in Tick.
+        An angle diff &lt; 1° means alignment is done and the coordinate system is trustworthy.
+        <code>bIsSmoothRotating</code> gets set to <code>false</code> first to ensure it only fires once per flip.
+      </p>
+
+      <div class="block-label code-label">Code — <span style="font-weight:400">FPSCharacter.cpp · Tick()</span></div>
+      <div class="code-block">
+        <div class="code-block-header">
+          <span class="filename">FPSCharacter.cpp</span>
+          <span>Tick() · lines 141–165</span>
+        </div>
+        <pre><code><span class="kw">float</span> AngleDifference = <span class="fn">FMath::RadiansToDegrees</span>(
+    NewActorRot.<span class="fn">Quaternion</span>().<span class="fn">AngularDistance</span>(TargetActorRotation.<span class="fn">Quaternion</span>()));
+
+<span class="kw">if</span> (AngleDifference &lt; <span class="nm">1.0f</span>) <span class="cm">// aligned — coordinate system is stable</span>
+{
+    <span class="fn">SetActorRotation</span>(TargetActorRotation);
+    <span class="kw">if</span> (Controller)
+        Controller-><span class="fn">SetControlRotation</span>(TargetActorRotation);
+
+    <span class="tp">FVector</span> SnappedUp = TargetActorRotation.<span class="fn">Quaternion</span>().<span class="fn">GetAxisZ</span>();
+    <span class="fn">GetCharacterMovement</span>()-><span class="fn">SetGravityDirection</span>(-SnappedUp);
+    <span class="fn">GetCharacterMovement</span>()-><span class="fn">SetMovementMode</span>(MOVE_Falling);
+
+    bIsSmoothRotating = <span class="kw">false</span>; <span class="cm">// set false first so SpawnRoomObjects can't re-trigger</span>
+
+    <span class="cm">// coordinate system is stable — spawn now</span>
+    <span class="fn">SpawnRoomObjects</span>();
+}</code></pre>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- 4-2 -->
+  <div class="section">
+    <div class="section-header">
+      <span class="badge" style="background:#9a6700">2</span>
+      <h2>Filtering random raycasts for valid wall spawn points</h2>
+    </div>
+    <div class="section-body">
+
+      <div class="block-label problem">The Problem</div>
+      <p class="block-text">
+        Random rays hit floors, props, and other surfaces that shouldn't get vents — spawning on those breaks things.
+        But you can't just retry infinitely or the frame stalls.
+      </p>
+
+      <div class="block-label solution">The Fix</div>
+      <p class="block-text">
+        Cap retries at 10. On each hit, check whether the Actor has the <code>SpawnableWall</code> tag —
+        no tag, move on; all 10 miss, give up and skip this spawn.
+        Level designers just tag the surfaces where vents are allowed to appear.
+      </p>
+
+      <div class="block-label code-label">Code — <span style="font-weight:400">FPSCharacter.cpp · TryFindRandomWallSpawnPoint()</span></div>
+      <div class="code-block">
+        <div class="code-block-header">
+          <span class="filename">FPSCharacter.cpp</span>
+          <span>TryFindRandomWallSpawnPoint() · lines 297–349</span>
+        </div>
+        <pre><code><span class="kw">for</span> (<span class="tp">int32</span> i = <span class="nm">0</span>; i &lt; <span class="nm">10</span>; ++i) <span class="cm">// max 10 attempts — don't stall the frame</span>
+{
+    <span class="tp">FVector</span> RandomDirection = <span class="fn">FMath::VRand</span>(); <span class="cm">// uniform random direction on a sphere</span>
+    <span class="tp">FVector</span> EndLocation = StartLocation + RandomDirection * <span class="nm">3000.0f</span>;
+
+    <span class="tp">FHitResult</span> HitResult;
+    <span class="tp">FCollisionQueryParams</span> QueryParams;
+    QueryParams.<span class="fn">AddIgnoredActor</span>(<span class="kw">this</span>);
+
+    <span class="kw">if</span> (<span class="fn">GetWorld</span>()-><span class="fn">LineTraceSingleByChannel</span>(
+            HitResult, StartLocation, EndLocation, ECC_Visibility, QueryParams))
+    {
+        <span class="tp">AActor</span>* HitActor = HitResult.<span class="fn">GetActor</span>();
+
+        <span class="cm">// only surfaces tagged SpawnableWall are valid spawn points</span>
+        <span class="kw">if</span> (HitActor &amp;&amp; HitActor-><span class="fn">ActorHasTag</span>(<span class="tp">FName</span>(<span class="st">"SpawnableWall"</span>)))
+        {
+            OutLocation = HitResult.ImpactPoint;
+            OutRotation = <span class="tp">FRotationMatrix</span>::<span class="fn">MakeFromX</span>(HitResult.ImpactNormal).<span class="fn">Rotator</span>();
+            <span class="kw">return true</span>;
+        }
+    }
+}
+<span class="kw">return false</span>; <span class="cm">// all 10 missed a valid wall</span></code></pre>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- 4-3 -->
+  <div class="section">
+    <div class="section-header">
+      <span class="badge" style="background:#9a6700">3</span>
+      <h2>Vent auto-facing outward, Boss spawn position avoiding wall geometry</h2>
+    </div>
+    <div class="section-body">
+
+      <div class="block-label problem">The Problem</div>
+      <p class="block-text">
+        The vent needs to face outward correctly on any surface — side walls, ceiling, whatever the new floor is after a flip.
+        If the Boss spawns directly at the hit point, the capsule clips into the wall and gets launched by the physics engine.
+      </p>
+
+      <div class="block-label solution">The Fix</div>
+      <p class="block-text">
+        Build the vent's rotation from the raycast's <code>ImpactNormal</code> as the X axis (<code>MakeFromX</code>).
+        The surface normal is always pointing outward, so the vent faces the room automatically on any surface — no manual rotation needed.
+        VentSpawner's <code>SpawnArea</code> is offset 100 units along that X axis,
+        so the Boss spawns in open air in front of the wall instead of inside it.
+      </p>
+
+      <div class="block-label code-label">Code — <span style="font-weight:400">FPSCharacter.cpp · TryFindRandomWallSpawnPoint() &amp; VentSpawner.cpp</span></div>
+      <div class="code-block">
+        <div class="code-block-header">
+          <span class="filename">FPSCharacter.cpp</span>
+          <span>ImpactNormal → vent orientation</span>
+        </div>
+        <pre><code><span class="cm">// ImpactNormal is the outward surface normal — use it as X axis so the vent faces the room</span>
+OutRotation = <span class="tp">FRotationMatrix</span>::<span class="fn">MakeFromX</span>(HitResult.ImpactNormal).<span class="fn">Rotator</span>();
+
+<span class="cm">// spawn the vent with this rotation — no manual adjustments needed for any surface angle</span>
+<span class="fn">GetWorld</span>()-><span class="fn">SpawnActor</span>&lt;<span class="tp">AActor</span>&gt;(VentSpawnerClass, SpawnLoc, SpawnRot, SpawnParams);</code></pre>
+      </div>
+      <div class="code-block" style="margin-top:10px">
+        <div class="code-block-header">
+          <span class="filename">VentSpawner.cpp</span>
+          <span>Constructor · SpawnArea offset &amp; SpawnBoss()</span>
+        </div>
+        <pre><code><span class="cm">// push SpawnArea 100 units forward along X (the vent's outward direction)</span>
+<span class="cm">// Boss spawns inside this box — always in open air, never clipping into the wall</span>
+SpawnArea-><span class="fn">SetRelativeLocation</span>(<span class="tp">FVector</span>(<span class="nm">100.f</span>, <span class="nm">0.f</span>, <span class="nm">0.f</span>));
+SpawnArea-><span class="fn">SetBoxExtent</span>(<span class="tp">FVector</span>(<span class="nm">100.f</span>, <span class="nm">100.f</span>, <span class="nm">50.f</span>));
+
+<span class="cm">// SpawnBoss(): pick a random point inside the offset box</span>
+<span class="tp">FVector</span> RandomSpawnLocation = <span class="fn">UKismetMathLibrary::RandomPointInBoundingBox</span>(
+    SpawnArea-><span class="fn">GetComponentLocation</span>(),
+    SpawnArea-><span class="fn">GetScaledBoxExtent</span>());
+
+<span class="tp">ABossAI</span>* SpawnedBoss = <span class="fn">GetWorld</span>()-><span class="fn">SpawnActor</span>&lt;<span class="tp">ABossAI</span>&gt;(
+    BossClassToSpawn, RandomSpawnLocation, <span class="fn">GetActorRotation</span>(), SpawnParams);</code></pre>
+      </div>
+
+    </div>
+  </div>
+
+</div>
+</body>
+</html>

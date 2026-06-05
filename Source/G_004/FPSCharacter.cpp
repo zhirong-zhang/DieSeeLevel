@@ -3,14 +3,14 @@
 #include "FPSCharacter.h"
 #include "Camera/CameraComponent.h"
 #include "Components/CapsuleComponent.h"
-#include "Components/StaticMeshComponent.h" 
+#include "Components/StaticMeshComponent.h"
 #include "GameFramework/CharacterMovementComponent.h"
 #include "EnhancedInputComponent.h"
-#include "Kismet/GameplayStatics.h" 
+#include "Kismet/GameplayStatics.h"
 
 AFPSCharacter::AFPSCharacter()
 {
-    PrimaryActorTick.bCanEverTick = true; 
+    PrimaryActorTick.bCanEverTick = true;
 
     GetCapsuleComponent()->InitCapsuleSize(40.f, 96.f);
 
@@ -23,18 +23,18 @@ AFPSCharacter::AFPSCharacter()
     FirstPersonCamera = CreateDefaultSubobject<UCameraComponent>(TEXT("FirstPersonCamera"));
     FirstPersonCamera->SetupAttachment(GetCapsuleComponent());
     FirstPersonCamera->SetRelativeLocation(FVector(0.f, 0.f, 64.f));
-    
-    FirstPersonCamera->bUsePawnControlRotation = false; 
+
+    FirstPersonCamera->bUsePawnControlRotation = false;
 
     CurrentCameraPitch = 0.0f;
 
     GravityPlane = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("GravityPlane"));
-    GravityPlane->SetupAttachment(GetMesh()); 
-    GravityPlane->SetRelativeLocation(FVector(100.f, 0.f, 50.f)); 
+    GravityPlane->SetupAttachment(GetMesh());
+    GravityPlane->SetRelativeLocation(FVector(100.f, 0.f, 50.f));
 
     GravityArrow = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("GravityArrow"));
     GravityArrow->SetupAttachment(GravityPlane);
-    GravityArrow->SetRelativeLocation(FVector(0.f, 0.f, 10.f)); 
+    GravityArrow->SetRelativeLocation(FVector(0.f, 0.f, 10.f));
 
     bIsShiftingGravity = false;
     CurrentGyroRotation = FRotator::ZeroRotator;
@@ -43,7 +43,7 @@ AFPSCharacter::AFPSCharacter()
 
     bIsSmoothRotating = false;
     TargetActorRotation = FRotator::ZeroRotator;
-    SmoothRotationSpeed = 10.0f; 
+    SmoothRotationSpeed = 10.0f;
 }
 
 void AFPSCharacter::BeginPlay()
@@ -51,19 +51,17 @@ void AFPSCharacter::BeginPlay()
     Super::BeginPlay();
 
     bUseControllerRotationPitch = false;
-    bUseControllerRotationYaw = false; 
+    bUseControllerRotationYaw = false;
     bUseControllerRotationRoll = false;
 
     GetCharacterMovement()->bOrientRotationToMovement = false;
     GetCharacterMovement()->bUseControllerDesiredRotation = false;
 
-    // =========================================================================
-    // 【新增】：游戏开始时，默认隐藏重力平台及其子组件（箭头）
+    // hide the gravity indicator and its children on game start
     if (GravityPlane)
     {
-        GravityPlane->SetVisibility(false, true); 
+        GravityPlane->SetVisibility(false, true);
     }
-    // =========================================================================
 }
 
 void AFPSCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
@@ -94,7 +92,7 @@ void AFPSCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCompon
 void AFPSCharacter::InputGyroData(const FInputActionValue& Value)
 {
     FVector GyroVector = Value.Get<FVector>();
-    CurrentGyroRotation = FRotator(GyroVector.Y, GyroVector.Z, GyroVector.X); 
+    CurrentGyroRotation = FRotator(GyroVector.Y, GyroVector.Z, GyroVector.X);
 }
 
 void AFPSCharacter::Tick(float DeltaTime)
@@ -109,8 +107,8 @@ void AFPSCharacter::Tick(float DeltaTime)
         float AbsPitch = FMath::Abs(PitchDelta);
         float AbsRoll  = FMath::Abs(RollDelta);
 
-        float PitchMultiplier = 1.0f; 
-        float RollMultiplier  = 1.0f; 
+        float PitchMultiplier = 1.0f;
+        float RollMultiplier  = 1.0f;
 
         if (AbsPitch > AbsRoll && AbsPitch > 0.01f)
         {
@@ -131,7 +129,7 @@ void AFPSCharacter::Tick(float DeltaTime)
     {
         FRotator CurrentActorRot = GetActorRotation();
         FRotator NewActorRot = FMath::RInterpTo(CurrentActorRot, TargetActorRotation, DeltaTime, SmoothRotationSpeed);
-        
+
         SetActorRotation(NewActorRot);
         if (Controller)
         {
@@ -154,13 +152,12 @@ void AFPSCharacter::Tick(float DeltaTime)
 
             bIsSmoothRotating = false;
 
-            // ================= 【核心触发点：重力切换完毕，触发生成！】 =================
+            // gravity aligned — trigger level refresh
             SpawnRoomObjects();
-            // =========================================================================
 
             if (GEngine)
             {
-                GEngine->AddOnScreenDebugMessage(-1, 3.0f, FColor::Green, TEXT("【重力姿态对齐完成，已生成场景物件！】"));
+                GEngine->AddOnScreenDebugMessage(-1, 3.0f, FColor::Green, TEXT("[Gravity aligned — level objects spawned]"));
             }
         }
     }
@@ -173,21 +170,19 @@ void AFPSCharacter::GyroGravityStarted()
     bIsShiftingGravity = true;
     AccumulatedPitch = 0.0f;
     AccumulatedRoll = 0.0f;
-    
+
     if (GravityPlane)
     {
         InitialPlaneQuat = GravityPlane->GetRelativeRotation().Quaternion();
-        
-        // =========================================================================
-        // 【新增】：按下按键的瞬间，显示重力平台及其子组件
+
+        // show the gravity indicator on button press
         GravityPlane->SetVisibility(true, true);
-        // =========================================================================
     }
 
     GetCharacterMovement()->Velocity = FVector::ZeroVector;
     GetCharacterMovement()->SetMovementMode(MOVE_None);
 
-    // 瞬间回正视角，方便玩家以绝对水平面调整重力
+    // snap camera pitch to zero so the player aims from a neutral horizontal baseline
     CurrentCameraPitch = 0.0f;
     if (FirstPersonCamera)
     {
@@ -196,7 +191,7 @@ void AFPSCharacter::GyroGravityStarted()
 
     if (GEngine)
     {
-        GEngine->AddOnScreenDebugMessage(-1, 2.0f, FColor::Yellow, TEXT("【重力瞄准模式启动】"));
+        GEngine->AddOnScreenDebugMessage(-1, 2.0f, FColor::Yellow, TEXT("[Gravity aim mode active]"));
     }
 }
 
@@ -216,18 +211,16 @@ void AFPSCharacter::GyroGravityCompleted()
         FVector SnappedForward = SnapVectorToClosestAxis(ProjectedForward);
 
         FRotator FinalSnappedRot = FRotationMatrix::MakeFromXZ(SnappedForward, SnappedUp).Rotator();
-        
+
         TargetActorRotation = FinalSnappedRot;
         bIsSmoothRotating = true;
 
         if (GravityPlane)
         {
             GravityPlane->SetRelativeRotation(InitialPlaneQuat);
-            
-            // =========================================================================
-            // 【新增】：松开按键的瞬间，隐藏重力平台及其子组件
+
+            // hide the gravity indicator on button release
             GravityPlane->SetVisibility(false, true);
-            // =========================================================================
         }
     }
 }
@@ -282,7 +275,7 @@ void AFPSCharacter::MouseLook(const FInputActionValue& Value)
     if (Controller != nullptr)
     {
         float YawInput   = Axis.X * MouseLookSensitivity;
-        float PitchInput = -Axis.Y * MouseLookSensitivity; 
+        float PitchInput = -Axis.Y * MouseLookSensitivity;
 
         FQuat YawRotation(FVector::UpVector, FMath::DegreesToRadians(YawInput));
         AddActorLocalRotation(YawRotation);
@@ -292,13 +285,11 @@ void AFPSCharacter::MouseLook(const FInputActionValue& Value)
     }
 }
 
-// ================= 【新增：随机墙壁探测与生成机制】 =================
-
 bool AFPSCharacter::TryFindRandomWallSpawnPoint(FVector& OutLocation, FRotator& OutRotation)
 {
     FVector StartLocation = GetActorLocation();
 
-    // 给它 10 次机会去寻找合法的墙壁
+    // max 10 attempts — don't stall the frame
     for (int32 i = 0; i < 10; ++i)
     {
         FVector RandomDirection = FMath::VRand();
@@ -308,62 +299,58 @@ bool AFPSCharacter::TryFindRandomWallSpawnPoint(FVector& OutLocation, FRotator& 
         FCollisionQueryParams QueryParams;
         QueryParams.AddIgnoredActor(this);
 
-        // 射线追踪
         if (GetWorld()->LineTraceSingleByChannel(HitResult, StartLocation, EndLocation, ECC_Visibility, QueryParams))
         {
             AActor* HitActor = HitResult.GetActor();
             if (HitActor)
             {
-                // 【调试可视化】：无论是否打中 Tag，先画出射击射线和击中点
-                // 绘制一条红色的射线，持续 5 秒
                 DrawDebugLine(GetWorld(), StartLocation, HitResult.ImpactPoint, FColor::Red, false, 5.0f);
 
                 FString HitName = HitActor->GetName();
-                FString InfoMsg = FString::Printf(TEXT("【调试】打中 Actor: %s"), *HitName);
+                FString InfoMsg = FString::Printf(TEXT("[Debug] Hit actor: %s"), *HitName);
 
-                // 检查被击中的 Actor 是否带有 "SpawnableWall" 标签
+                // only surfaces tagged SpawnableWall are valid spawn points
                 if (HitActor->ActorHasTag(FName("SpawnableWall")))
                 {
-                    if (GEngine) GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Green, FString::Printf(TEXT("【成功】打中了合法的墙壁: %s"), *HitName));
-                    DrawDebugBox(GetWorld(), HitResult.ImpactPoint, FVector(10.0f), FColor::Green, false, 5.0f); // 【调试可视化】：成功点画一个绿色的框
+                    if (GEngine) GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Green, FString::Printf(TEXT("[OK] Hit valid wall: %s"), *HitName));
+                    DrawDebugBox(GetWorld(), HitResult.ImpactPoint, FVector(10.0f), FColor::Green, false, 5.0f);
 
-                    // 只有打中带有该标签的墙壁，才算成功找到点
                     OutLocation = HitResult.ImpactPoint;
 
-                    // 依然保持正脸朝外（X轴 = 法线）
+                    // ImpactNormal as X axis — vent faces outward automatically
                     OutRotation = FRotationMatrix::MakeFromX(HitResult.ImpactNormal).Rotator();
 
-                    return true; // 成功找到合法墙壁，退出循环
+                    return true;
                 }
                 else
                 {
-                    // if (GEngine) GEngine->AddOnScreenDebugMessage(-1, 2.f, FColor::Red, FString::Printf(TEXT("【失败】打中了没有Tag的物体: %s"), *HitName));
-                    DrawDebugBox(GetWorld(), HitResult.ImpactPoint, FVector(5.0f), FColor::Red, false, 5.0f); // 【调试可视化】：失败点画一个红色的框
+                    // if (GEngine) GEngine->AddOnScreenDebugMessage(-1, 2.f, FColor::Red, FString::Printf(TEXT("[Miss] No tag: %s"), *HitName));
+                    DrawDebugBox(GetWorld(), HitResult.ImpactPoint, FVector(5.0f), FColor::Red, false, 5.0f);
                 }
             }
         }
     }
 
-    if (GEngine) GEngine->AddOnScreenDebugMessage(-1, 3.f, FColor::Yellow, TEXT("10次射线都没打中合法的墙，取消生成"));
-    return false; // 10次都没打中合法的墙壁，放弃生成
+    if (GEngine) GEngine->AddOnScreenDebugMessage(-1, 3.f, FColor::Yellow, TEXT("All 10 raycasts missed a valid wall — skipping spawn"));
+    return false;
 }
 
 void AFPSCharacter::SpawnRoomObjects()
 {
     FVector SpawnLoc;
     FRotator SpawnRot;
-    
+
     FActorSpawnParameters SpawnParams;
-    // 配置碰撞覆盖规则：即使轻微穿模，也强行生成
+    // always spawn even if slightly overlapping
     SpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
 
-    // 1. 尝试生成 通风口 (出怪口)
+    // 1. spawn the vent (enemy exit)
     if (VentSpawnerClass && TryFindRandomWallSpawnPoint(SpawnLoc, SpawnRot))
     {
         GetWorld()->SpawnActor<AActor>(VentSpawnerClass, SpawnLoc, SpawnRot, SpawnParams);
     }
 
-    // 2. 尝试生成 逃生门 (Escape Portal)
+    // 2. spawn the escape portal
     if (EscapePortalClass && TryFindRandomWallSpawnPoint(SpawnLoc, SpawnRot))
     {
         GetWorld()->SpawnActor<AActor>(EscapePortalClass, SpawnLoc, SpawnRot, SpawnParams);

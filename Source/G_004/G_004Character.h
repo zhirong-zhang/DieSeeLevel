@@ -11,7 +11,7 @@ class USpringArmComponent;
 class UCameraComponent;
 class UInputAction;
 struct FInputActionValue;
-class UArrowComponent; // 【新增】前置声明箭头组件
+class UArrowComponent;
 
 DECLARE_LOG_CATEGORY_EXTERN(LogTemplateCharacter, Log, All);
 
@@ -30,7 +30,7 @@ class AG_004Character : public ACharacter
 
 protected:
 
-    // ---------------- 原有基础输入 ----------------
+    // ---------------- Base Input ----------------
     UPROPERTY(EditAnywhere, Category="Input")
     UInputAction* JumpAction;
 
@@ -43,7 +43,7 @@ protected:
     UPROPERTY(EditAnywhere, Category="Input")
     UInputAction* MouseLookAction;
 
-    // ---------------- 陀螺仪与重力输入 ----------------
+    // ---------------- Gyro and Gravity Input ----------------
     UPROPERTY(EditAnywhere, Category="Input|Gyro")
     UInputAction* GyroGravityAction;
 
@@ -56,18 +56,18 @@ protected:
     UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="Gyro")
     FRotator StartGyroRotation;
 
-    // ---------------- 【新增】箭头组件与状态 ----------------
-    /** 用于显示重力方向的箭头 */
+    // ---------------- Gravity Arrow ----------------
+    /** arrow showing the current/predicted gravity direction */
     UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="Components")
     UArrowComponent* GravityArrow;
 
-    /** 标识玩家当前是否正在按住按键瞄准重力 */
+    /** true while the player is holding the gravity aim button */
     bool bIsAimingGravity;
 
 public:
-    AG_004Character(); 
+    AG_004Character();
 
-    // 【新增】允许每帧更新以刷新箭头方向
+    // enable Tick to update arrow direction each frame
     virtual void Tick(float DeltaTime) override;
 
 protected:
@@ -75,7 +75,7 @@ protected:
 
     void Move(const FInputActionValue& Value);
     void Look(const FInputActionValue& Value);
-    
+
     void InputGyroData(const FInputActionValue& Value);
     void GyroGravityStarted();
     void GyroGravityCompleted();
