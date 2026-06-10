@@ -9,6 +9,10 @@ A first-person action prototype built in Unreal Engine 5.7. You physically rotat
 
 ---
 
+## Gameplay Video: https://youtu.be/CIPvtUEF5VE
+
+---
+
 ## How It Works
 
 1. Hold the designated button — your character stops moving and a visual gravity indicator (GravityPlane) appears in the scene
